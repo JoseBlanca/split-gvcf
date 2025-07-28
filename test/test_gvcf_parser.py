@@ -1,11 +1,12 @@
 from io import BytesIO
+import tempfile
+import gzip
 
 import numpy
 
 from split_gvcf.gvcf_parser import (
     parse_gvcf,
     parse_gvcf_into_ranges,
-    parse_gvcfs_into_ranges,
 )
 
 VCF = b"""##fileformat=VCFv4.5
@@ -20,6 +21,11 @@ VCF = b"""##fileformat=VCFv4.5
 
 def test_parse_gvcf():
     fhand = BytesIO(VCF)
+    expected = [("20", 10, 1), ("20", 30, 1), ("20", 40, 1), ("20", 50, 4)]
+    for idx, var in enumerate(parse_gvcf(fhand)):
+        assert expected[idx] == var
+
+    fhand = BytesIO(gzip.compress(VCF))
     expected = [("20", 10, 1), ("20", 30, 1), ("20", 40, 1), ("20", 50, 4)]
     for idx, var in enumerate(parse_gvcf(fhand)):
         assert expected[idx] == var

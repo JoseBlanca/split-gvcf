@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Iterator, Tuple, BinaryIO
+from typing import Iterator, Tuple
 from array import array
-from concurrent.futures import ThreadPoolExecutor
+import gzip
 
 import iranges
 from genomicranges import GenomicRanges
@@ -10,12 +10,21 @@ FILTER_FIELD_IDX = 5
 NON_REF = b"<NON_REF>"
 
 
+def file_is_gzipped(fhand):
+    magic = fhand.read(2)
+    fhand.seek(0)
+    return magic == b"\x1f\x8b"
+
+
 class VcfSection(Enum):
     HEADER = 1
     BODY = 2
 
 
 def parse_gvcf(fhand) -> Iterator[Tuple[str, int, int]]:
+    if file_is_gzipped(fhand):
+        fhand = gzip.GzipFile(fileobj=fhand)
+
     section = VcfSection.HEADER
     for line in fhand:
         if section == VcfSection.HEADER:
