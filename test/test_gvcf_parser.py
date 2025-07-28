@@ -32,6 +32,6 @@ def test_parse_gvcf():
 
 
 def test_parse_into_ranges():
-    fhand = BytesIO(VCF)
+    fhand = BytesIO(gzip.compress(VCF))
     ranges = parse_gvcf_into_ranges(fhand)
     assert numpy.all(ranges.start == [10, 30, 40, 50])
