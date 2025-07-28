@@ -158,6 +158,7 @@ dependencies = [
     { name = "genomicranges" },
     { name = "iranges" },
     { name = "numpy" },
+    { name = "threaded-map-reduce" },
 ]
 
 [package.dev-dependencies]
@@ -170,7 +171,13 @@ requires-dist = [
     { name = "genomicranges", specifier = ">=0.7.1" },
     { name = "iranges", specifier = ">=0.5.2" },
     { name = "numpy", specifier = ">=2.3.1" },
+    { name = "threaded-map-reduce", git = "https://github.com/JoseBlanca/threaded-map-reduce" },
 ]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.4.1" }]
+
+[[package]]
+name = "threaded-map-reduce"
+version = "0.1.0"
+source = { git = "https://github.com/JoseBlanca/threaded-map-reduce#dc7dd4bcf5df42325574aafb709aa5ff0588db97" }

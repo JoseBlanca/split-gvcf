@@ -1,9 +1,12 @@
 from io import BytesIO
+import tempfile
+from pathlib import Path
+import gzip
 
 import numpy
 
 from split_gvcf.gvcf_parser import parse_gvcf_into_ranges
-from split_gvcf.ranges_union import unify_two_ranges
+from split_gvcf.ranges_union import unify_two_ranges, create_union_ranges_from_vcfs
 
 VCF1 = b"""##fileformat=VCFv4.5
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNA00001\tNA00002\tNA00003
@@ -32,3 +35,22 @@ def test_vcf_union():
     ranges = unify_two_ranges(ranges1, ranges2)
     assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
     assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
+
+
+def test_gvcfs_union():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_dir_path = Path(tmp_dir)
+        path_vcf1 = tmp_dir_path / "1.vcf.gz"
+        fhand1 = gzip.open(path_vcf1, "wb")
+        fhand1.write(VCF1)
+        fhand1.close()
+        path_vcf2 = tmp_dir_path / "2.vcf.gz"
+        fhand2 = gzip.open(path_vcf2, "wb")
+        fhand2.write(VCF2)
+        fhand2.close()
+        ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2])
+        assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
+        assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
+        ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2], threads=2)
+        assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
+        assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
