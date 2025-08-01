@@ -1,8 +1,14 @@
 from pathlib import Path
 from subprocess import run
 import shutil
+import sys
 
-python_command = ["pytest", "test/"]
+python_command = sys.argv[2:]
+if not python_command:
+    python_command = ["pytest", "test"]
+
+EXTRA_MOUNTS = [(Path("/home/jose/tmp/vcfs_per_sample/"), Path("/vcfs"))]
+
 UV_COMMAND = ["uv", "run"] + python_command
 
 PROJECT_DIR = Path(__name__).parent.absolute()
@@ -16,6 +22,8 @@ try:
     CMD = ["podman", "run", "-it", "--rm"]
     CMD.extend(["-v", f"{PROJECT_DIR}:{PROJECT_DIR_IN_CONTAINER}"])
     CMD.extend(["-v", "uv-cache:/root/.cache/uv"])
+    for local_dir, container_dir in EXTRA_MOUNTS:
+        CMD.extend(["-v", f"{local_dir}:{container_dir}"])
     CMD.extend(["-w", str(PROJECT_DIR_IN_CONTAINER)])
     CMD.append(CONTAINER_TEMPLATE_NAME)
     CMD.extend(UV_COMMAND)

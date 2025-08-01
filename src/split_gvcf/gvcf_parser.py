@@ -7,6 +7,7 @@ from pathlib import Path
 import iranges
 from genomicranges import GenomicRanges
 
+
 FILTER_FIELD_IDX = 5
 NON_REF = b"<NON_REF>"
 
@@ -64,5 +65,14 @@ def parse_gvcf_into_ranges(fhand) -> GenomicRanges:
     return ranges
 
 
+def parse_gvcf_into_ranges_from_path(fpath) -> GenomicRanges:
+    with open(fpath, "rb") as fhand:
+        return parse_gvcf_into_ranges(fhand)
+
+
 def parse_gvcf_from_path(fpath: Path) -> GenomicRanges:
-    return parse_gvcf_into_ranges(open(fpath, "rb"))
+    chrom_ids, positions, widths, chrom_names = gvcfparser.collect_vars_positions(
+        str(fpath)
+    )
+    print(type(chrom_ids))
+    # return GenomicRanges(chrom=chrom_ids, start=positions, width=widths)

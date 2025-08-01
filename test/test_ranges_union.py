@@ -37,17 +37,19 @@ def test_vcf_union():
     assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
 
 
+def write_compressed_file(path, content):
+    fhand2 = gzip.open(path, "wb")
+    fhand2.write(content)
+    fhand2.close()
+
+
 def test_gvcfs_union():
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
         path_vcf1 = tmp_dir_path / "1.vcf.gz"
-        fhand1 = gzip.open(path_vcf1, "wb")
-        fhand1.write(VCF1)
-        fhand1.close()
         path_vcf2 = tmp_dir_path / "2.vcf.gz"
-        fhand2 = gzip.open(path_vcf2, "wb")
-        fhand2.write(VCF2)
-        fhand2.close()
+        write_compressed_file(path_vcf1, VCF1)
+        write_compressed_file(path_vcf2, VCF2)
         ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2])
         assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
         assert numpy.all(ranges.end == [10, 20, 31, 40, 53])

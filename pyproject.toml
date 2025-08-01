@@ -11,7 +11,8 @@ dependencies = [
     "genomicranges>=0.7.1",
     "iranges>=0.5.2",
     "numpy>=2.3.1",
-    "threaded-map-reduce",
+    "pandas>=2.3.1",
+    "polars>=1.32.0",
 ]
 
 [project.scripts]
@@ -25,6 +26,3 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=8.4.1",
 ]
-
-[tool.uv.sources]
-threaded-map-reduce = { git = "https://github.com/JoseBlanca/threaded-map-reduce" }

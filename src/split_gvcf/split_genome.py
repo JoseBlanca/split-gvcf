@@ -10,6 +10,11 @@ def split_in_empty_loci(
 ):
     searcher = RangesSearcher(ranges)
 
+    if set(chrom_sizes.keys()).difference(searcher.sorted_seqnames):
+        raise ValueError(
+            "There are chromosome with sizes that are not found in the ranges"
+        )
+
     for chrom in searcher.sorted_seqnames:
         segment_start = 1
 

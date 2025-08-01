@@ -1,3 +1,5 @@
+import pytest
+
 from genomicranges import GenomicRanges
 from iranges import IRanges
 
@@ -34,4 +36,31 @@ def test_split_genome():
         ("chr2", 92, 100),
     ]
     assert list(segments) == expected
-    print()
+
+    chrom_sizes = {"chr1": 100, "chr2": 100, "chr3": 100}
+    with pytest.raises(ValueError):
+        list(
+            split_in_empty_loci(
+                ranges=ranges,
+                chrom_sizes=chrom_sizes,
+                desired_region_size=15,
+            )
+        )
+
+
+def test_desired_larger_than_chrom():
+    ranges = GenomicRanges(
+        seqnames=["chr1", "chr1", "chr2", "chr2"],
+        ranges=IRanges([10, 50, 20, 60], [10, 10, 10, 10]),
+    )
+    chrom_sizes = {"chr1": 100, "chr2": 100}
+    segments = split_in_empty_loci(
+        ranges=ranges,
+        chrom_sizes=chrom_sizes,
+        desired_region_size=200,
+    )
+    expected = [
+        ("chr1", 1, 100),
+        ("chr2", 1, 100),
+    ]
+    assert list(segments) == expected
