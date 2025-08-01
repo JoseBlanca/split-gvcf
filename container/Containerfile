@@ -1,0 +1,57 @@
+LABEL description="Container for splitting the genome avoiding variants"
+
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV GVCF_PARSER_REPO=https://github.com/JoseBlanca/gvcf_parser_rs.git
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    bzip2 \
+    unzip \
+    git \
+    coreutils \
+    file \
+    build-essential \
+    autoconf \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libisal-dev \
+    libdeflate-dev \
+    llvm-dev \
+    libclang-dev \
+    clang \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+# Install Rust (stable)
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv && \
+    mv /root/.local/bin/uvx /usr/local/bin/uvx
+
+RUN echo "Verifying uv..." && \
+    uv --version && \
+    echo "uv installed OK"
+
+RUN git clone --depth=1 ${GVCF_PARSER_REPO} && \
+    cd gvcf_parser_rs && \
+    cargo install --path . --root /usr/local && \
+    cd .. && rm -rf gvcf_parser_rs
+
+RUN echo "Verifying gvcf_parser_rs..." && \
+    save_var_regions_as_parquet --help && \
+    echo "gvcf_parser_rs OK"
+
+RUN mkdir /code
