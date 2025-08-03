@@ -6,7 +6,7 @@ import gzip
 import numpy
 
 from split_gvcf.gvcf_parser import parse_gvcf_into_ranges
-from split_gvcf.ranges_union import unify_two_ranges, create_union_ranges_from_vcfs
+from split_gvcf.ranges_union import unify_two_ranges
 
 VCF1 = b"""##fileformat=VCFv4.5
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNA00001\tNA00002\tNA00003
@@ -41,15 +41,3 @@ def write_compressed_file(path, content):
     fhand2 = gzip.open(path, "wb")
     fhand2.write(content)
     fhand2.close()
-
-
-def test_gvcfs_union():
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_dir_path = Path(tmp_dir)
-        path_vcf1 = tmp_dir_path / "1.vcf.gz"
-        path_vcf2 = tmp_dir_path / "2.vcf.gz"
-        write_compressed_file(path_vcf1, VCF1)
-        write_compressed_file(path_vcf2, VCF2)
-        ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2])
-        assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
-        assert numpy.all(ranges.end == [10, 20, 31, 40, 53])

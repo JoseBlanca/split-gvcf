@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Iterator, Tuple
 from array import array
 import gzip
-from pathlib import Path
 
 import iranges
 from genomicranges import GenomicRanges
@@ -68,11 +67,3 @@ def parse_gvcf_into_ranges(fhand) -> GenomicRanges:
 def parse_gvcf_into_ranges_from_path(fpath) -> GenomicRanges:
     with open(fpath, "rb") as fhand:
         return parse_gvcf_into_ranges(fhand)
-
-
-def parse_gvcf_from_path(fpath: Path) -> GenomicRanges:
-    chrom_ids, positions, widths, chrom_names = gvcfparser.collect_vars_positions(
-        str(fpath)
-    )
-    print(type(chrom_ids))
-    # return GenomicRanges(chrom=chrom_ids, start=positions, width=widths)
