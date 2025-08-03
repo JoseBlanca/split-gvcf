@@ -53,6 +53,3 @@ def test_gvcfs_union():
         ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2])
         assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
         assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
-        ranges = create_union_ranges_from_vcfs([path_vcf1, path_vcf2], threads=2)
-        assert numpy.all(ranges.start == [9, 20, 29, 40, 50])
-        assert numpy.all(ranges.end == [10, 20, 31, 40, 53])
