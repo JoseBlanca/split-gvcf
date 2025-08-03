@@ -4,11 +4,13 @@ from multiprocessing import Pool
 from subprocess import run, CalledProcessError
 import os
 import functools
+from typing import Iterator
 
 import polars
 from genomicranges import GenomicRanges
 
 from split_gvcf.ranges_union import unify_two_ranges
+from split_gvcf.split_genome import split_in_empty_loci
 
 VCF_PARSER_BIN = "save_var_regions_as_parquet"
 
@@ -72,25 +74,13 @@ def _create_hashes_for_paths(paths):
     return hashes
 
 
-def split_genome_avoiding_vars(
-    vcf_paths: list[Path],
-    working_dir: Path,
-    chrom_size_path: Path,
-    out_parquet_vars_ranges: Path,
-    desired_segment_size: int,
-    n_vcf_parsing_processes=1,
-):
-    chrom_sizes = _read_chrom_sizes(chrom_size_path)
-
-    working_dir = Path(working_dir)
-    working_dir.mkdir(exist_ok=True)
-
+def _get_vars_ranges(vcf_paths, working_dir, n_vcf_parsing_processes) -> GenomicRanges:
     hashes_for_vcfs = _create_hashes_for_paths(vcf_paths)
     metadata_str = "-".join([hashes_for_vcfs[path] for path in vcf_paths])
     metadata_bytes = metadata_str.encode("utf-8")
     hash_digest = hashlib.sha256(metadata_bytes).hexdigest()
     range_union_parquet = working_dir / f"variant_regions_union.{hash_digest}.parquet"
-    print(range_union_parquet)
+
     if not range_union_parquet.exists():
         res = _parse_gvcfs(
             working_dir, vcf_paths, hashes_for_vcfs, n_vcf_parsing_processes
@@ -109,4 +99,22 @@ def split_genome_avoiding_vars(
         df.write_parquet(range_union_parquet)
     else:
         df = polars.read_parquet(range_union_parquet)
-    print(df)
+    vars_ranges = GenomicRanges.from_polars(df)
+    return vars_ranges
+
+
+def split_genome_avoiding_vars(
+    vcf_paths: list[Path],
+    working_dir: Path,
+    chrom_size_path: Path,
+    desired_segment_size: int,
+    n_vcf_parsing_processes=1,
+) -> Iterator[tuple[str, int, int]]:
+    chrom_sizes = _read_chrom_sizes(chrom_size_path)
+
+    working_dir = Path(working_dir)
+    working_dir.mkdir(exist_ok=True)
+
+    vars_ranges = _get_vars_ranges(vcf_paths, working_dir, n_vcf_parsing_processes)
+
+    yield from split_in_empty_loci(vars_ranges, chrom_sizes, desired_segment_size)
