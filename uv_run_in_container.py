@@ -20,7 +20,7 @@ UV_SHARE = ".local/share/uv"
 UV_CACHE = ".cache/uv"
 
 
-python_command = sys.argv[2:]
+python_command = sys.argv[1:]
 if not python_command:
     python_command = ["pytest", "test"]
 
