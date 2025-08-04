@@ -2,51 +2,81 @@
 
 from pathlib import Path
 from subprocess import run
-import shutil
 import sys
+import tomllib
 
-CONTAINER_TEMPLATE_NAME = "split_genome"
-EXTRA_MOUNTS = [(Path("/home/jose/tmp/vcfs_per_sample/"), Path("/vcfs"))]
-
-CONTAINER_VENV = Path(".venv_container").absolute()
-CONTAINER_VENV.mkdir(exist_ok=True)
+TOOL_NAME = "run_in_container"
 PROJECT_DIR_IN_CONTAINER = Path("/code")
-EXCLUDED_PROJECT_DIRS = [".venv", ".pytest_cache", CONTAINER_VENV.name]
-
-HOME_DIR = Path.home().absolute()
-PROJECT_DIR = Path(__name__).parent.absolute()
+EXCLUDED_PROJECT_DIRS = (
+    ".venv",
+    ".pytest_cache",
+    "container",
+)
 ROOT_HOME_DIR_IN_CONTAINER = Path("/root/")
 UV_SHARE = ".local/share/uv"
 UV_CACHE = ".cache/uv"
 
 
-python_command = sys.argv[1:]
-if not python_command:
-    python_command = ["pytest", "test"]
-
-PROJECT_MOUNTS = [
-    (path, PROJECT_DIR_IN_CONTAINER / path.name)
-    for path in PROJECT_DIR.iterdir()
-    if path.name not in EXCLUDED_PROJECT_DIRS
-]
-PROJECT_MOUNTS.append((CONTAINER_VENV, PROJECT_DIR_IN_CONTAINER / ".venv"))
-PROJECT_MOUNTS.append((HOME_DIR / UV_SHARE, ROOT_HOME_DIR_IN_CONTAINER / UV_SHARE))
-PROJECT_MOUNTS.append((HOME_DIR / UV_CACHE, ROOT_HOME_DIR_IN_CONTAINER / UV_CACHE))
-
-UV_COMMAND = ["uv", "run"] + python_command
+def _read_tool_config(pyproject_toml) -> dict:
+    with pyproject_toml.open("rb") as f:
+        data = tomllib.load(f)
+    return data.get("tool", {}).get(TOOL_NAME, {})
 
 
-VENV_DIR = PROJECT_DIR / ".venv"
-if VENV_DIR.exists():
-    shutil.rmtree(VENV_DIR)
+def main():
+    project_dir = Path(__name__).parent.absolute()
+    pyproject_toml = project_dir / "pyproject.toml"
+    if not pyproject_toml.exists():
+        raise RuntimeError("pyproject.toml not found: {pyproject_toml}")
 
-CMD = ["podman", "run", "-it", "--rm"]
-CMD.extend(["-v", f"{PROJECT_DIR}:{PROJECT_DIR_IN_CONTAINER}"])
-for MOUNTS in (PROJECT_MOUNTS, EXTRA_MOUNTS):
-    for local_dir, container_dir in MOUNTS:
-        CMD.extend(["-v", f"{local_dir}:{container_dir}"])
-CMD.extend(["-w", str(PROJECT_DIR_IN_CONTAINER)])
-CMD.append(CONTAINER_TEMPLATE_NAME)
-CMD.extend(UV_COMMAND)
+    config = _read_tool_config(pyproject_toml)
 
-run(CMD, check=True)
+    excluded_project_dirs = list(EXCLUDED_PROJECT_DIRS)
+
+    project_mounts = []
+
+    for path_in_host, path_in_container in config["dir_mounts"]:
+        if not Path(path_in_host).exists():
+            raise RuntimeError(f"Path to mount does not exist: {path_in_host}")
+        project_mounts.append((Path(path_in_host), Path(path_in_container)))
+
+    home_dir = Path.home().absolute()
+
+    command = sys.argv[1:]
+    if not command:
+        command = ["pytest", "test"]
+
+    if container_venv_in_host := config.get("container_venv_in_host", None):
+        container_venv_in_host = Path(container_venv_in_host)
+        container_venv_in_host.mkdir(exist_ok=True)
+        project_mounts.append(
+            (container_venv_in_host, PROJECT_DIR_IN_CONTAINER / ".venv")
+        )
+        excluded_project_dirs.append(container_venv_in_host.name)
+    if config.get("share_uv_cache", False):
+        project_mounts.append(
+            (home_dir / UV_SHARE, ROOT_HOME_DIR_IN_CONTAINER / UV_SHARE)
+        )
+        project_mounts.append(
+            (home_dir / UV_CACHE, ROOT_HOME_DIR_IN_CONTAINER / UV_CACHE)
+        )
+
+    for path in project_dir.iterdir():
+        if path.name in excluded_project_dirs:
+            continue
+        project_mounts.append((path, PROJECT_DIR_IN_CONTAINER / path.name))
+
+    cmd = ["podman", "run", "-it", "--rm"]
+    cmd.extend(["-v", f"{project_dir}:{PROJECT_DIR_IN_CONTAINER}"])
+
+    for local_dir, container_dir in project_mounts:
+        cmd.extend(["-v", f"{local_dir}:{container_dir}"])
+    cmd.extend(["-w", str(PROJECT_DIR_IN_CONTAINER)])
+    cmd.append(config["container_template_name"])
+    cmd.extend(command)
+    print(" ".join(cmd))
+    run(cmd, check=True)
+
+
+if __name__ == "__main__":
+    main()

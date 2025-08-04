@@ -26,3 +26,9 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=8.4.1",
 ]
+
+[tool.run_in_container]
+container_template_name = "split_genome"
+dir_mounts = [["/home/jose/tmp/vcfs_per_sample/", "/vcfs"]]
+share_uv_cache = true
+container_venv_in_host = ".venv_container"
