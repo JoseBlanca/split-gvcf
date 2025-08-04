@@ -74,7 +74,6 @@ def main():
     cmd.extend(["-w", str(PROJECT_DIR_IN_CONTAINER)])
     cmd.append(config["container_template_name"])
     cmd.extend(command)
-    print(" ".join(cmd))
     run(cmd, check=True)
 
 
