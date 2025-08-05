@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from split-gvcf!")
+from .split_genome_avoiding_vars import split_genome_avoiding_vars
