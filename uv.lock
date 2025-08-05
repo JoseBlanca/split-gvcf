@@ -213,6 +213,11 @@ wheels = [
 ]
 
 [[package]]
+name = "run-in-container"
+version = "0.1.0"
+source = { git = "https://github.com/JoseBlanca/run_in_container.git#2c55e9eb8208115829c15893abe62439f36bffc4" }
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -236,6 +241,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "run-in-container" },
 ]
 
 [package.metadata]
@@ -248,7 +254,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.4.1" }]
+dev = [
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "run-in-container", git = "https://github.com/JoseBlanca/run_in_container.git" },
+]
 
 [[package]]
 name = "tzdata"

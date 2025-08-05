@@ -25,6 +25,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pytest>=8.4.1",
+    "run-in-container",
 ]
 
 [tool.run_in_container]
@@ -32,3 +33,6 @@ container_template_name = "split_genome"
 dir_mounts = [["/home/jose/tmp/vcfs_per_sample/", "/vcfs"]]
 share_uv_cache = true
 container_venv_in_host = ".venv_container"
+
+[tool.uv.sources]
+run-in-container = { git = "https://github.com/JoseBlanca/run_in_container.git" }

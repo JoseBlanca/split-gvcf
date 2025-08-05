@@ -110,7 +110,7 @@ class RangesSearcher:
         if lo == first_range_for_seq:
             if self._before_than(seqname, pos, self.seqnames[lo], self.starts[lo]):
                 raise BeforeFirstRange()
-            elif self._before_than(seqname, pos, self.seqnames[lo], self.ends[lo]):
+            elif self._before_than(seqname, pos, self.seqnames[lo], self.ends[lo] + 1):
                 raise InFirstRange()
 
         return lo

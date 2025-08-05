@@ -19,20 +19,20 @@ def split_in_empty_loci(
         segment_start = 1
 
         while True:
-            segment_end = segment_start + desired_region_size
+            segment_end = segment_start + desired_region_size - 1
 
-            prev_segment = None
+            prev_var_range = None
             try:
-                prev_segment = searcher.find_prev_range(chrom, segment_end)
+                prev_var_range = searcher.find_prev_range(chrom, segment_end)
             except BeforeFirstRange:
                 pass
             except InFirstRange:
                 idx = searcher.first_range_for_seq[chrom]
                 segment_end = int(searcher.starts[idx]) - 1
 
-            if prev_segment is not None:
-                if prev_segment < len(ranges) - 1:
-                    next_segment = prev_segment + 1
+            if prev_var_range is not None:
+                if prev_var_range < len(ranges) - 1:
+                    next_segment = prev_var_range + 1
                     if (
                         searcher.starts[next_segment] < segment_end
                         and chrom == searcher.seqnames[next_segment]
