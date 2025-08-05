@@ -103,6 +103,10 @@ def _get_vars_ranges(vcf_paths, working_dir, n_vcf_parsing_processes) -> Genomic
     return vars_ranges
 
 
+def create_var_ranges(vcf_paths, working_dir, n_vcf_parsing_processes) -> GenomicRanges:
+    return _get_vars_ranges(vcf_paths, working_dir, n_vcf_parsing_processes)
+
+
 def split_genome_avoiding_vars(
     vcf_paths: list[Path],
     working_dir: Path,

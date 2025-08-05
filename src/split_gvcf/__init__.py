@@ -1,1 +1,1 @@
-from .split_genome_avoiding_vars import split_genome_avoiding_vars
+from .split_genome_avoiding_vars import split_genome_avoiding_vars, create_var_ranges
